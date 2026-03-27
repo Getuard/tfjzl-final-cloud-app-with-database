@@ -94,7 +94,26 @@ class Enrollment(models.Model):
     mode = models.CharField(max_length=5, choices=COURSE_MODES, default=AUDIT)
     rating = models.FloatField(default=5.0)
 
+class Question(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    text = models.CharField(max_length=200, default="question")
+    grade = models.FloatField(default=0)
 
+    def is_get_score(self, selected_choices):
+        selected_choices = set(selected_choices)
+        all_choices = set(self.choice_set.all())
+        correct_choices = set(self.choice_set.filter(is_correct=True))
+        return correct_choices == all_choices.intersection(selected_choices)
+
+class Choice(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    text = models.CharField(max_length=200, default='choice')
+    is_correct = models.BooleanField(default=False)
+
+class Submission(models.Model):
+    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
+    choices = models.ManyToManyField(Choice)
+    
 # One enrollment could have multiple submission
 # One submission could have multiple choices
 # One choice could belong to multiple submissions
